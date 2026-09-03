@@ -87,7 +87,9 @@
   .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
   .cal-dow-row { margin-bottom: 10px; }
   .cal-dow { text-align:center; font-size:11px; font-weight:700; color:#9ca3af; padding-bottom:4px; }
-  .cal-cell { min-height: 68px; border: 1px solid #f0f0f4; border-radius: 8px; padding: 6px 6px; background:#fafafa; }
+  .cal-cell { height: 104px; box-sizing: border-box; overflow-y: auto; border: 1px solid #f0f0f4; border-radius: 8px; padding: 6px 6px; background:#fafafa; }
+  .cal-cell::-webkit-scrollbar { width: 4px; }
+  .cal-cell::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
   .cal-cell.cal-empty { background: transparent; border-color: transparent; }
   .cal-cell.cal-has-event { background:#f0fdfa; border-color:#99f6e4; }
   .cal-daynum { font-size: 11px; color:#9ca3af; font-weight:700; margin-bottom:4px; }
