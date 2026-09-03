@@ -6,43 +6,21 @@
 <title>재고 운영 현황 | SIORE</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    background: #f4f5f7;
-    color: #1a1a2e;
-    padding: 24px 24px 32px;
-    font-size: 13px;
-  }
-  .page-header {
-    background: linear-gradient(135deg, #0d2b45 0%, #1b4d6e 100%);
-    margin: -24px -24px 0;
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f4f5f7; color: #1a1a2e; padding: 24px 24px 32px; font-size: 13px; }
+  .page-header { background: linear-gradient(135deg, #0d2b45 0%, #1b4d6e 100%); margin: -24px -24px 0; padding: 16px 28px; display: flex; align-items: center; gap: 20px; }
   .page-header-logo { height: 26px; flex-shrink: 0; display: flex; align-items: center; }
   .page-header-logo img { height: 26px; width: auto; }
   .page-header-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.25); flex-shrink: 0; }
   .page-header-text h1 { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
   .page-header-text .subtitle { color: rgba(255,255,255,0.55); font-size: 11px; }
-
-  .tab-nav {
-    display: flex; gap: 0; background: #fff; margin: 0 -24px; padding: 0 16px;
-    border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative;
-  }
+  .tab-nav { display: flex; gap: 0; background: #fff; margin: 0 -24px; padding: 0 16px; border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
   .tab-nav::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
-  .tab-btn {
-    padding: 14px 24px 13px; border: none; background: none; cursor: pointer; font-size: 14px;
-    font-weight: 600; color: #9ca3af; border-bottom: 3px solid transparent; margin-bottom: -1px;
-    transition: color 0.18s, border-color 0.18s; font-family: inherit; white-space: nowrap; letter-spacing: -0.01em;
-  }
+  .tab-btn { padding: 14px 24px 13px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #9ca3af; border-bottom: 3px solid transparent; margin-bottom: -1px; transition: color 0.18s, border-color 0.18s; font-family: inherit; white-space: nowrap; letter-spacing: -0.01em; }
   .tab-btn:hover { color: #374151; border-bottom-color: #d1fae5; }
   .tab-btn.active { color: #0d9488; font-weight: 700; border-bottom-color: #14b8a6; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
   .tab-panel-wrap { padding-top: 20px; }
-
   .findings { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
   .findings h2 { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
   .finding-item { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
@@ -51,12 +29,10 @@
   .icon-warn { background: #fef3c7; }
   .finding-text { font-size: 12.5px; color: #374151; line-height: 1.55; }
   .finding-text strong { color: #111827; }
-
   .panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; border-bottom:1px solid #f0f0f4; flex-wrap:wrap; }
   .panel-header h2 { font-size: 14px; font-weight: 700; }
   .panel-header .meta { font-size: 11px; color: #9ca3af; }
   .panel { background:#fff; border-radius:12px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.07); overflow:hidden; }
-
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   thead th { background: #f9fafb; padding: 10px 12px; text-align: center; font-weight: 600; color: #6b7280; font-size: 11px; letter-spacing: 0.03em; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
   thead th:first-child { text-align: left; }
@@ -75,7 +51,6 @@
   .sub-code { font-size:11px; color:#9ca3af; font-weight:400; margin-top:2px; }
   .note-inline { display:block; font-size:11px; color:#c2410c; font-weight:500; margin-top:3px; }
   .val-empty { color:#d1d5db; font-size:11px; }
-
   .cat-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
   .cat-nmn { background:#eff6ff; color:#1d4ed8; }
   .cat-daily { background:#f0fdf4; color:#166534; }
@@ -84,17 +59,14 @@
   .cat-pack { background:#fff7ed; color:#c2410c; }
   .cat-gwp { background:#f0fdfa; color:#0d9488; }
   .cat-mat { background:#f3f4f6; color:#4b5563; }
-
   .stock-avail { font-weight:700; color:#111827; }
   .stock-blocked { color:#dc2626; font-weight:700; }
-
   .dday-chip { display:inline-block; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:700; }
   .dday-urgent { background:#fee2e2; color:#dc2626; }
   .dday-soon { background:#fef3c7; color:#d97706; }
   .dday-later { background:#f3f4f6; color:#6b7280; }
   .dday-err { background:#fee2e2; color:#dc2626; }
   .dday-na { background:#f3f4f6; color:#9ca3af; }
-
   .ch-scroll { overflow-x: auto; }
   .ch-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
   .ch-table th { padding: 8px 12px; text-align: right; font-weight: 600; color: #6b7280; font-size: 11px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
@@ -104,8 +76,8 @@
   .ch-table tbody tr:hover td { background: #fafafa; }
   .ch-table tbody tr:hover td.col-fix { background: #fafafa; }
   .val-total { color: #1d4ed8; font-weight: 700; }
-
   .updated-note { padding: 12px 20px; font-size: 11.5px; color: #6b7280; border-top: 1px solid #f3f4f6; background: #fafafa; }
+  .build-footer { text-align:center; font-size:11px; color:#9ca3af; padding: 18px 0 4px; }
 </style>
 </head>
 <body>
@@ -125,7 +97,7 @@
 <div class="tab-panel-wrap">
 <div class="findings">
 <h2>🔍 핵심 요약</h2>
-<div class='finding-item'><div class='finding-icon icon-ok'>✓</div><div class='finding-text'>전체 <strong>39개 SKU</strong>, 총재고 합계 <strong>70,141개</strong>.</div></div>
+<div class='finding-item'><div class='finding-icon icon-ok'>✓</div><div class='finding-text'>전체 <strong>39개 SKU</strong>, 총재고 합계 <strong>70,111개</strong>.</div></div>
 <div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'><strong>불용(대기) 재고 총 10,514개</strong> — 4개 품목에 집중 (NMN 인텐시브 세럼, NMN 프레쉬 버블 토너, NMN 하이드레이팅 수딩 크림(통합), 데일리 릴리프 카밍 수딩 젤).</div></div>
 <div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'>입고 예정 <strong>9건</strong> 중 가장 임박: <strong>(사은품) [시오레] NMN 딥 글로우 리치크림 3ml</strong> — 2026.09.15 (D-12)</div></div>
 <div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'>⚠ <strong>입고예정일 미기재로 D-Day 계산 오류</strong>: (사은품) [시오레] NMN 하이드로 클렌징 밀크 3ml — 원본 시트 확인 필요.</div></div>
@@ -133,7 +105,7 @@
 <div class="panel">
 <div class="panel-header">
 <h2>📦 제품별 재고 현황</h2>
-<div class="meta">재고 업데이트: 2026-09-02 10:41</div>
+<div class="meta">재고 업데이트: 2026-09-03 10:01</div>
 </div>
 <table>
 <thead><tr><th>구분</th><th style="text-align:left;">제품명</th><th>제품코드</th><th>유통기한</th><th>총재고</th><th>가용재고</th><th>불용(대기)</th><th>입고예정</th><th>D-Day</th></tr></thead>
@@ -319,8 +291,8 @@
 <td class="name-col">[시오레] 데일리 릴리프 카밍 수딩 젤</td>
 <td class="code-col">202650000039</td>
 <td class="exp-col">—</td>
-<td class="num">4,605</td>
-<td class="num stock-avail">1,105</td>
+<td class="num">4,603</td>
+<td class="num stock-avail">1,103</td>
 <td class="num"><span class='stock-blocked'>3,500</span></td>
 <td class="incoming-col"><div>10,000</div><div class='sub-date'>2026.11.23</div></td>
 <td class="dday-col"><span class="dday-chip dday-later">D-81</span></td>
@@ -341,8 +313,8 @@
 <td class="name-col">(약국) RRP 박스 + 데일리 릴리프 카밍 수딩 젤(10EA)</td>
 <td class="code-col">201069000212</td>
 <td class="exp-col">—</td>
-<td class="num">38</td>
-<td class="num stock-avail">38</td>
+<td class="num">36</td>
+<td class="num stock-avail">36</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
@@ -352,8 +324,8 @@
 <td class="name-col">[시오레] 데일리 릴리프 컴포트 크림</td>
 <td class="code-col">202650000040</td>
 <td class="exp-col">—</td>
-<td class="num">1,745</td>
-<td class="num stock-avail">1,745</td>
+<td class="num">1,743</td>
+<td class="num stock-avail">1,743</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
@@ -374,8 +346,8 @@
 <td class="name-col">[시오레] PDRN 200 어드밴스드</td>
 <td class="code-col">202846000088</td>
 <td class="exp-col">—</td>
-<td class="num">8,931</td>
-<td class="num stock-avail">8,931</td>
+<td class="num">8,909</td>
+<td class="num stock-avail">8,909</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
@@ -385,8 +357,8 @@
 <td class="name-col">[시오레] PDRN 200 어드밴스드 스티커 10개 (1장)</td>
 <td class="code-col">201069000285</td>
 <td class="exp-col">—</td>
-<td class="num">468</td>
-<td class="num stock-avail">468</td>
+<td class="num">466</td>
+<td class="num stock-avail">466</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
@@ -612,6 +584,7 @@
 <h2>🌎 Amazon US 재고 현황</h2>
 <div class="meta">재고 업데이트: 2026-09-01 15:16</div>
 </div>
+<div class="ch-scroll">
 <table>
 <thead><tr><th>구분</th><th style="text-align:left;">제품명</th><th>SKU</th><th>ASIN</th><th>가용재고</th><th>출고 집계</th><th>박스 사양</th></tr></thead>
 <tbody>
@@ -699,11 +672,13 @@
 </tbody>
 </table>
 </div>
+</div>
 <div class="updated-note">
 💡 위 "출고 집계"는 원본 시트의 누적 출고 집계 값이며, 월별 세부 출고 데이터는 원본에 아직 반영되지 않아 이번 리포트에서는 제외했습니다.
 </div>
 </div>
 </div>
+<div class="build-footer">자동 생성됨 · 매일 오전 10시(KST) 구글시트에서 갱신 · 마지막 빌드: 2026-09-03 01:02 UTC</div>
 <script>
 function switchTab(id) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
