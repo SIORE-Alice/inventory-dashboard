@@ -13,7 +13,7 @@
   .page-header-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.25); flex-shrink: 0; }
   .page-header-text h1 { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
   .page-header-text .subtitle { color: rgba(255,255,255,0.55); font-size: 11px; }
-  .tab-nav { display: flex; gap: 0; background: #fff; margin: 0 -24px; padding: 0 16px; border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
+  .tab-nav { display: flex; gap: 0; background: #fff; margin: 0 -24px; padding: 0 16px; border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; flex-wrap: wrap; }
   .tab-nav::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
   .tab-btn { padding: 14px 24px 13px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #9ca3af; border-bottom: 3px solid transparent; margin-bottom: -1px; transition: color 0.18s, border-color 0.18s; font-family: inherit; white-space: nowrap; letter-spacing: -0.01em; }
   .tab-btn:hover { color: #374151; border-bottom-color: #d1fae5; }
@@ -45,6 +45,11 @@
   .cat-col { text-align:left; }
   .incoming-col { font-size:11.5px; color:#6b7280; line-height:1.5; text-align:left; white-space:nowrap; }
   .incoming-col .sub-date { color:#9ca3af; font-size:11px; }
+  .deplete-col { font-size:11.5px; color:#6b7280; line-height:1.5; text-align:left; white-space:nowrap; }
+  .deplete-col .sub-date { font-size:11px; }
+  .dday-urgent-text { color:#dc2626; font-weight:600; }
+  .dday-soon-text { color:#d97706; font-weight:600; }
+  .dday-later-text { color:#9ca3af; }
   .dday-col { text-align:center; }
   .box-col { font-size:11px; color:#6b7280; text-align:left; white-space:nowrap; }
   .mono { font-family:monospace; }
@@ -78,11 +83,21 @@
   .val-total { color: #1d4ed8; font-weight: 700; }
   .updated-note { padding: 12px 20px; font-size: 11.5px; color: #6b7280; border-top: 1px solid #f3f4f6; background: #fafafa; }
   .build-footer { text-align:center; font-size:11px; color:#9ca3af; padding: 18px 0 4px; }
+  .cal-grid { padding: 12px 20px 20px; }
+  .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
+  .cal-dow-row { margin-bottom: 10px; }
+  .cal-dow { text-align:center; font-size:11px; font-weight:700; color:#9ca3af; padding-bottom:4px; }
+  .cal-cell { min-height: 68px; border: 1px solid #f0f0f4; border-radius: 8px; padding: 6px 6px; background:#fafafa; }
+  .cal-cell.cal-empty { background: transparent; border-color: transparent; }
+  .cal-cell.cal-has-event { background:#f0fdfa; border-color:#99f6e4; }
+  .cal-daynum { font-size: 11px; color:#9ca3af; font-weight:700; margin-bottom:4px; }
+  .cal-event { font-size: 10.5px; background:#0d9488; color:#fff; border-radius:6px; padding:3px 6px; margin-bottom:3px; display:flex; justify-content:space-between; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-event span { font-weight:700; flex-shrink:0; }
 </style>
 </head>
 <body>
 <div class="page-header">
-  <div class="page-header-logo"><img src="data:image/png;base64,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" alt="SIORÉ" /></div>
+  <div class="page-header-logo"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAd4AAACKCAYAAAAE9iuWAAAIeUlEQVR4nO3dzZajSA4G0PCcfv9X9iyyOe10pSuNiR9Jce9mNtOVgIQ+Aht8u9/vDQCY43+rNwAAdiJ4AWAiwQsAEwleAJhI8ALARIIXACYSvAAw0T+rNwAAJuj10orb1X/AiheA6sKEbmuCF4DaQoVua241A1BTuMA9WPECUE3Y0G1N8AJQS+jQbU3wAlBH+NBtzWe8ANTQI3SHBu7BiheA7NKEbmuCF4DcUoVua241A5DX1dCdGrgHK14AMkoZuq0JXgDySRu6rQleAHJJHbqt+YwXgDyuhO7ywD1Y8QKQQYnQbU3wAhBfmdBtza1mAGL7NHTDBe7BiheAasKGbmtWvADEFjpEP2HFCwATCV4AmEjwAsBEghcAJsr25arfvlZe7kN4QtKHwMciBW+P31TcdSCWe85tsau9uGsfXtVjBoyiZq9FrtsKv/bKyuBdUayf/qYTitm9qA/zOdMjaslfzQ7eiFdGj9vkhNlHtF7Uh3U895Z68s2s4I025F4x/OrL0IvHNurBGswVvhkdvBmG3CuGXx1Z+1AP1iOEGRq8WYfdM8MvLz1IZOq6qRHBW2XYPXOS5FKxD/VgTeq6md4v0Kg47J7d2x77mdUO9dlhH3ekppvoGbyahtV268Hd9ncHLqo20Ct4NQor7Tysdt73ytS0sB7Bu2OD+Cwmjh377yeOQz1qWtTV4NUYrKT/vnM86lHTgq58q3lWQ3y6utSwtUWq763F2Z57c0emGjUtJtKPJBx6NdhP/06P4egEWG92yL1T89/+PzO3ecdBPXN/V71nvmJNK+7Trz4N3t6NN+vgP/6dKCsUzplRtxH9+Pxvjt6PqoM6glfH1UzhLatXvCsHwychbJCtNXqwzazv8bdG7pPwnWv0hb16FvHJl6t6NVSkBrq1WNvDn0YF1K2trf/ov20VtsaouqpnAb3fXPWOyCH3t22Lus07GBm6UYw8LwzrdSLPOxY5G7y7nMBOljhG9Fzk+lop1dSzpmqZ3OwVb9Rh90q27a1mxJf4stQ0y3byPjWltTY3eLM2XaZhzWsZa9i796yU1utVT7VMbMVnvPCOnoMlY+g+Er61ZO9HLjoTvFdOWI3GGUL3T1X2gy/quTErXiqrNtzcpqzlaj3VMSnBSzQVnxPvSfhCcoKXiqqG7qH6/u1ELTc0I3g1Fu/yIxZzWfXCAjOC18kN/bnAoDXzNSW3monCave8HvtrcK+3W99uT/BSheEFpCB4icCq63MuOCCZWcFrsDLS7uHjeVBI5Ezw7j7cAOCymbeaXVXzk6t94YLwi+MAScz+jFf4QkzOTZhkxZernOD0YpUHpHM2eHu+J1YAQ18uRCCB1Y8TCeC9qT2wndXBexDAnGV1159zECb4JHhHDrx7E8JwhQsSCO7TFe+Mk1sIA1DOP6s34E3P4euqHqjiyuIi+yzMvLD6+NhfCd5bW3fQBPHe1BtI6+qKd2X4PhLEQEYR5ieT9fhWc8SQuzefEUenLuNEPCeBf/X6jDfKyvcVK2IgGu8p31TPL1cdTRA5gA+P26h5AZhmxAs0sgWZ29HAbGbOxka9uerWBDDAT3rMmWzzlQejXxkpgAH+Y7Yw7QUamT7/PRzbmu3CAYin5+wzk5Kb/SMJt5ZvFZzpYgGIxwzhm5WvjHwM3+iNafULnDVirplBBUR5V/NzM0UN4nvT+L1Ef/Y7M8d1nZHH3uwpIkrwPoscxMIXOESaTRltOUujBu+zaEEsfNdy/Hm2eiaMpt8LyRK8z6IFMcAoQreYrMH7bEUQW3UBo5kxBc1+nGiWWY8tWWkTjZ6sQ+gWVTV4H2V7bpj3CJj+nCdxqEVhOwTvQQDHox7wnTm1gZ2C99C7sa28iEIv5iZwN7Fj8B40eX6Chgqscjezc/C2ptnh4FyYT+Buavfgba1P41t5fe7q8XfsvzgOeQjczQneL04CAKYQvP8Rvnntvtq7uv96f67d+3V7gpcIDP7PGeLz9bhVrG4bq/LKSPAKz71lrL2e3ZQV73dOgnV8ye28Hvur5z/n2PERwQs57XaREZVbzpwmeInEqncuK7YY9OxmBC8VVR9k1fcvGxcwnCJ4vzPQ1us1xKrWstd+CYu+3HLmbZ8GryYhg2p9KnRrq9avvPBJ8N4f/lejMIJfj/pTlf2ozHcUeEuPW81VGuXKflhB9Cd8/9Nz+/XqWI4vvzobvK8GgNUv0WXsz97nlVCYw+e9/FXvL1dlbZis211d76DIdIGYZTsZQ/0LOxO87zZCpuHWmhfMRzfi+Ebu0VHbpk/ncrx5aeTjRJGH2yH69vFl1BCLVP+R54sQWMMtZ3707o8kXGmAx/82ygDwWEY+tzZmEK3uz9HDVY/m5ocUCpr9Ao3Vq+DVf59rRg+gmf0x428Z2OupAX94Z8U7epXR2pyB2psTag1RK99HI/pz9gWf/ozjas9a9RYT5fd4f2rKTxvNira+GeH7KFtPGdL1VA3fbOfWGS/rFSV4fxK5IBVPgGxmh28WejOmHv1aNXy3885nvAr9neMRh1p853jEpj601t7/cpWG+eI4xKMmXxyHHDxixKlvNe9+Yu++/5Hd2r712XnfdyV8kzv7ONGuJ/mO+5zRbnXabX+rULfNffoc704BvMt+VrFDb+6wj9W55byxq99qPpqnYhMYbLlV7E09ySPfck6q15urql2BV9qX3VXozQr7wJ8yvpiFDno/x5t9lWG41ZWxN/VjfZ5H39CoF2g8DozoTWW47SVDAOtJznDLOZkZb656bogIA0+TEu3iUE/uy1utNnO735fPnBkboCE5a2Rf6kfYWIR3Nb8zhH4bggYZvf3WU3/rSf0IvBQheN9hkBGNngQ+0utxIgDgDYIXACYSvAAwkeAFgIkELwBMJHgBYKL/A12yUoTvAlGCAAAAAElFTkSuQmCC" alt="SIORÉ" /></div>
   <div class="page-header-sep"></div>
   <div class="page-header-text">
     <h1>재고 운영 현황</h1>
@@ -92,6 +107,8 @@
 <div class="tab-nav">
 <button class="tab-btn active" onclick="switchTab('tab-domestic')">📦 국내 재고 현황</button>
 <button class="tab-btn" onclick="switchTab('tab-amazon')">🌎 아마존 재고 현황</button>
+<button class="tab-btn" onclick="switchTab('tab-expiry')">⏳ 유통기한 임박 현황</button>
+<button class="tab-btn" onclick="switchTab('tab-calendar')">📅 입고 일정</button>
 </div>
 <div class="tab-content active" id="tab-domestic">
 <div class="tab-panel-wrap">
@@ -99,7 +116,7 @@
 <h2>🔍 핵심 요약</h2>
 <div class='finding-item'><div class='finding-icon icon-ok'>✓</div><div class='finding-text'>전체 <strong>39개 SKU</strong>, 총재고 합계 <strong>70,111개</strong>.</div></div>
 <div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'><strong>불용(대기) 재고 총 10,514개</strong> — 4개 품목에 집중 (NMN 인텐시브 세럼, NMN 프레쉬 버블 토너, NMN 하이드레이팅 수딩 크림(통합), 데일리 릴리프 카밍 수딩 젤).</div></div>
-<div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'>입고 예정 <strong>9건</strong> 중 가장 임박: <strong>(사은품) [시오레] NMN 딥 글로우 리치크림 3ml</strong> — 2026.09.15 (D-12)</div></div>
+<div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'>입고 예정 <strong>9건</strong> 중 가장 임박: <strong>(사은품) [시오레] NMN 딥 글로우 리치크림 3ml</strong> — 2026-09-15 25,000개 (D-12)</div></div>
 <div class='finding-item'><div class='finding-icon icon-warn'>◐</div><div class='finding-text'>⚠ <strong>입고예정일 미기재로 D-Day 계산 오류</strong>: (사은품) [시오레] NMN 하이드로 클렌징 밀크 3ml — 원본 시트 확인 필요.</div></div>
 </div>
 <div class="panel">
@@ -108,436 +125,436 @@
 <div class="meta">재고 업데이트: 2026-09-03 10:01</div>
 </div>
 <table>
-<thead><tr><th>구분</th><th style="text-align:left;">제품명</th><th>제품코드</th><th>유통기한</th><th>총재고</th><th>가용재고</th><th>불용(대기)</th><th>입고예정</th><th>D-Day</th></tr></thead>
+<thead><tr><th>구분</th><th>제품코드</th><th style="text-align:left;">제품명</th><th>총재고</th><th>가용재고</th><th>불용(대기)</th><th>입고예정</th><th>D-Day</th><th>예상소진일</th></tr></thead>
 <tbody>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-nmn">NMN</span></td>
-<td class="name-col">[시오레] NMN 인텐시브 세럼</td>
 <td class="code-col">202650000034</td>
-<td class="exp-col">2029.06.29</td>
+<td class="name-col">[시오레] NMN 인텐시브 세럼</td>
 <td class="num">1,068</td>
 <td class="num stock-avail">668</td>
 <td class="num"><span class='stock-blocked'>400</span></td>
-<td class="incoming-col"><div>30,000 ┃ 10,000</div><div class='sub-date'>2026.10.23 ┃ 2026.10.30</div></td>
+<td class="incoming-col">2026-10-23 30,000개<br>2026-10-30 10,000개</td>
 <td class="dday-col"><span class="dday-chip dday-later">D-50</span></td>
+<td class="deplete-col"><div>2026-12-10</div><div class='sub-date dday-later-text'>약 98일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] NMN 인텐시브 세럼</td>
 <td class="code-col">201069000193</td>
-<td class="exp-col">2029.03.18</td>
+<td class="name-col">[시오레US] NMN 인텐시브 세럼</td>
 <td class="num">91</td>
 <td class="num stock-avail">91</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2026-09-18</div><div class='sub-date dday-soon-text'>약 15일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(약국) RRP 박스 + NMN 인텐시브 세럼(10EA)</td>
 <td class="code-col">201069000211</td>
-<td class="exp-col">—</td>
+<td class="name-col">(약국) RRP 박스 + NMN 인텐시브 세럼(10EA)</td>
 <td class="num">27</td>
 <td class="num stock-avail">27</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2026-10-27</div><div class='sub-date dday-later-text'>약 54일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 프레쉬 버블 토너</td>
 <td class="code-col">202650000033</td>
-<td class="exp-col">2029.03.15</td>
+<td class="name-col">[시오레] NMN 프레쉬 버블 토너</td>
 <td class="num">419</td>
 <td class="num stock-avail">419</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 프레쉬 버블 토너(통합)<span class='note-inline'>Asian TV Awards 출고 예정(전량)</span></td>
 <td class="code-col">202650000033</td>
-<td class="exp-col">2029.06.07</td>
+<td class="name-col">[시오레] NMN 프레쉬 버블 토너(통합)<span class='note-inline'>Asian TV Awards 출고 예정(전량)</span></td>
 <td class="num">5,000</td>
 <td class="num stock-avail">5,000</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>5,000</div><div class='sub-date'>2026.10.05</div></td>
+<td class="incoming-col">2026-10-05 5,000개</td>
 <td class="dday-col"><span class="dday-chip dday-soon">D-32</span></td>
+<td class="deplete-col"><div>2028-03-02</div><div class='sub-date dday-later-text'>약 546일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] NMN 프레쉬 버블 토너</td>
 <td class="code-col">201069000195</td>
-<td class="exp-col">2029.03.15</td>
+<td class="name-col">[시오레US] NMN 프레쉬 버블 토너</td>
 <td class="num">3,674</td>
 <td class="num stock-avail">174</td>
 <td class="num"><span class='stock-blocked'>3,500</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2027-03-22</div><div class='sub-date dday-later-text'>약 200일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(약국) RRP 박스 + NMN 프레쉬 버블 토너(8EA)</td>
 <td class="code-col">201069000210</td>
-<td class="exp-col">—</td>
+<td class="name-col">(약국) RRP 박스 + NMN 프레쉬 버블 토너(8EA)</td>
 <td class="num">25</td>
 <td class="num stock-avail">25</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2026-10-10</div><div class='sub-date dday-later-text'>약 37일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림</td>
 <td class="code-col">202650000035</td>
-<td class="exp-col">2028.10.23</td>
+<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림</td>
 <td class="num">100</td>
 <td class="num stock-avail">100</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림(통합)</td>
 <td class="code-col">202650000035</td>
-<td class="exp-col">2029.07.09</td>
+<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림(통합)</td>
 <td class="num">4,861</td>
 <td class="num stock-avail">1,747</td>
 <td class="num"><span class='stock-blocked'>3,114</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2033-12-08</div><div class='sub-date dday-later-text'>약 2653일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] NMN 하이드레이팅 수딩 크림</td>
 <td class="code-col">201069000196</td>
-<td class="exp-col">2028.10.23</td>
+<td class="name-col">[시오레US] NMN 하이드레이팅 수딩 크림</td>
 <td class="num">33</td>
 <td class="num stock-avail">33</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2028-06-24</div><div class='sub-date dday-later-text'>약 660일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 딥 글로우 리치 크림</td>
 <td class="code-col">202650000036</td>
-<td class="exp-col">2029.06.15</td>
+<td class="name-col">[시오레] NMN 딥 글로우 리치 크림</td>
 <td class="num">6,925</td>
 <td class="num stock-avail">6,925</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>10,000 ┃ 5,000</div><div class='sub-date'>2026.10.05 ┃ 2026.10.30</div></td>
+<td class="incoming-col">2026-10-05 10,000개<br>2026-10-30 5,000개</td>
 <td class="dday-col"><span class="dday-chip dday-soon">D-32</span></td>
+<td class="deplete-col"><div>2031-11-08</div><div class='sub-date dday-later-text'>약 1892일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] NMN 하이드로 캡슐 클렌징 밀크</td>
 <td class="code-col">202650000032</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] NMN 하이드로 캡슐 클렌징 밀크</td>
 <td class="num">455</td>
 <td class="num stock-avail">455</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>5,000</div><div class='sub-date'>2026.10.30</div></td>
+<td class="incoming-col">2026-10-30 5,000개</td>
 <td class="dday-col"><span class="dday-chip dday-later">D-57</span></td>
+<td class="deplete-col"><div>2027-06-30</div><div class='sub-date dday-later-text'>약 300일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-daily">데일리 릴리프</span></td>
-<td class="name-col">[시오레] 데일리 릴리프 에센스 토너</td>
 <td class="code-col">202650000037</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 데일리 릴리프 에센스 토너</td>
 <td class="num">1,975</td>
 <td class="num stock-avail">1,975</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2037-02-19</div><div class='sub-date dday-later-text'>약 3822일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] 데일리 릴리프 에센스 토너</td>
 <td class="code-col">201069000197</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레US] 데일리 릴리프 에센스 토너</td>
 <td class="num">20</td>
 <td class="num stock-avail">20</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 데일리 릴리프 리페어 앰플</td>
 <td class="code-col">202650000038</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 데일리 릴리프 리페어 앰플</td>
 <td class="num">1,442</td>
 <td class="num stock-avail">1,442</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2032-10-28</div><div class='sub-date dday-later-text'>약 2247일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] 데일리 릴리프 리페어 앰플</td>
 <td class="code-col">201069000198</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레US] 데일리 릴리프 리페어 앰플</td>
 <td class="num">188</td>
 <td class="num stock-avail">188</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 데일리 릴리프 카밍 수딩 젤</td>
 <td class="code-col">202650000039</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 데일리 릴리프 카밍 수딩 젤</td>
 <td class="num">4,603</td>
 <td class="num stock-avail">1,103</td>
 <td class="num"><span class='stock-blocked'>3,500</span></td>
-<td class="incoming-col"><div>10,000</div><div class='sub-date'>2026.11.23</div></td>
+<td class="incoming-col">2026-11-23 10,000개</td>
 <td class="dday-col"><span class="dday-chip dday-later">D-81</span></td>
+<td class="deplete-col"><div>2027-07-21</div><div class='sub-date dday-later-text'>약 321일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] 데일리 릴리프 카밍 수딩 젤</td>
 <td class="code-col">201069000200</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레US] 데일리 릴리프 카밍 수딩 젤</td>
 <td class="num">69</td>
 <td class="num stock-avail">69</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(약국) RRP 박스 + 데일리 릴리프 카밍 수딩 젤(10EA)</td>
 <td class="code-col">201069000212</td>
-<td class="exp-col">—</td>
+<td class="name-col">(약국) RRP 박스 + 데일리 릴리프 카밍 수딩 젤(10EA)</td>
 <td class="num">36</td>
 <td class="num stock-avail">36</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2026-12-05</div><div class='sub-date dday-later-text'>약 93일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 데일리 릴리프 컴포트 크림</td>
 <td class="code-col">202650000040</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 데일리 릴리프 컴포트 크림</td>
 <td class="num">1,743</td>
 <td class="num stock-avail">1,743</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><div>2031-04-30</div><div class='sub-date dday-later-text'>약 1700일 후</div></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레US] 데일리 릴리프 컴포트 크림</td>
 <td class="code-col">201069000199</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레US] 데일리 릴리프 컴포트 크림</td>
 <td class="num">114</td>
 <td class="num stock-avail">114</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-pdrn">PDRN</span></td>
-<td class="name-col">[시오레] PDRN 200 어드밴스드</td>
 <td class="code-col">202846000088</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] PDRN 200 어드밴스드</td>
 <td class="num">8,909</td>
 <td class="num stock-avail">8,909</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] PDRN 200 어드밴스드 스티커 10개 (1장)</td>
 <td class="code-col">201069000285</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] PDRN 200 어드밴스드 스티커 10개 (1장)</td>
 <td class="num">466</td>
 <td class="num stock-avail">466</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-gift">사은품</span></td>
-<td class="name-col">(사은품) [시오레] NMN 시그니처 듀오 미니(스타터) 세트</td>
 <td class="code-col">202650000044</td>
-<td class="exp-col">—</td>
+<td class="name-col">(사은품) [시오레] NMN 시그니처 듀오 미니(스타터) 세트</td>
 <td class="num">8,124</td>
 <td class="num stock-avail">8,124</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(사은품) [시오레] NMN 인텐시브 세럼 미니</td>
 <td class="code-col">202650000042</td>
-<td class="exp-col">—</td>
+<td class="name-col">(사은품) [시오레] NMN 인텐시브 세럼 미니</td>
 <td class="num">903</td>
 <td class="num stock-avail">903</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(사은품) [시오레] NMN 리치 크림 미니</td>
 <td class="code-col"></td>
-<td class="exp-col">—</td>
+<td class="name-col">(사은품) [시오레] NMN 리치 크림 미니</td>
 <td class="num">—</td>
 <td class="num stock-avail">—</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty">—</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(사은품) [시오레] NMN 하이드로 클렌징 밀크 3ml</td>
 <td class="code-col">202650000046</td>
-<td class="exp-col">—</td>
+<td class="name-col">(사은품) [시오레] NMN 하이드로 클렌징 밀크 3ml</td>
 <td class="num">0</td>
 <td class="num stock-avail">0</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>25,000</div><div class='sub-date'>                                                                                                                      </div></td>
+<td class="incoming-col">날짜 미정 25,000개</td>
 <td class="dday-col"><span class="dday-chip dday-err">확인필요</span></td>
+<td class="deplete-col"><span class="dday-chip dday-err">재고소진</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">(사은품) [시오레] NMN 딥 글로우 리치크림 3ml</td>
 <td class="code-col">202650000047</td>
-<td class="exp-col">—</td>
+<td class="name-col">(사은품) [시오레] NMN 딥 글로우 리치크림 3ml</td>
 <td class="num">0</td>
 <td class="num stock-avail">0</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>25,000</div><div class='sub-date'>2026.09.15</div></td>
+<td class="incoming-col">2026-09-15 25,000개</td>
 <td class="dday-col"><span class="dday-chip dday-urgent">D-12</span></td>
+<td class="deplete-col"><span class="dday-chip dday-err">재고소진</span></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-pack">쇼핑백/리플렛</span></td>
-<td class="name-col">[시오레] 소형 쇼핑백</td>
 <td class="code-col">201069000168</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 소형 쇼핑백</td>
 <td class="num">8,599</td>
 <td class="num stock-avail">8,599</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 중형 쇼핑백</td>
 <td class="code-col">201068000128</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 중형 쇼핑백</td>
 <td class="num">691</td>
 <td class="num stock-avail">691</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 리플렛(국,영)_R1</td>
 <td class="code-col">202846000093</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 리플렛(국,영)_R1</td>
 <td class="num">1,112</td>
 <td class="num stock-avail">1,112</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 리플렛(국,영)</td>
 <td class="code-col">201069000170</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 리플렛(국,영)</td>
 <td class="num">2,000</td>
 <td class="num stock-avail">2,000</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 리플렛(중,일)</td>
 <td class="code-col">201069000183</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 리플렛(중,일)</td>
 <td class="num">1,600</td>
 <td class="num stock-avail">1,600</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-gwp">GWP</span></td>
-<td class="name-col">[시오레] 세안밴드</td>
 <td class="code-col">201069000171</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 세안밴드</td>
 <td class="num">0</td>
 <td class="num stock-avail">0</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>5,000</div><div class='sub-date'>2026.09.22</div></td>
+<td class="incoming-col">2026-09-22 5,000개</td>
 <td class="dday-col"><span class="dday-chip dday-soon">D-19</span></td>
+<td class="deplete-col"><span class="dday-chip dday-err">재고소진</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] 일회용 장바구니</td>
 <td class="code-col">201069000172</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] 일회용 장바구니</td>
 <td class="num">0</td>
 <td class="num stock-avail">0</td>
 <td class="num"><span class="val-empty">0</span></td>
-<td class="incoming-col"><div>5,000</div><div class='sub-date'>2026.09.22</div></td>
+<td class="incoming-col">2026-09-22 5,000개</td>
 <td class="dday-col"><span class="dday-chip dday-soon">D-19</span></td>
+<td class="deplete-col"><span class="dday-chip dday-err">재고소진</span></td>
 </tr>
 <tr>
 <td class="cat-col"><span class="cat-badge cat-mat">부자재</span></td>
-<td class="name-col">[시오레] NMN 5종 세트박스</td>
 <td class="code-col">201069000169</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] NMN 5종 세트박스</td>
 <td class="num">1,839</td>
 <td class="num stock-avail">1,839</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] RRP 박스 (인텐시브 세럼)</td>
 <td class="code-col">201069000188</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] RRP 박스 (인텐시브 세럼)</td>
 <td class="num">1,080</td>
 <td class="num stock-avail">1,080</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] RRP 박스 (카밍 수딩 젤)</td>
 <td class="code-col">201069000189</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] RRP 박스 (카밍 수딩 젤)</td>
 <td class="num">850</td>
 <td class="num stock-avail">850</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 <tr>
 <td class="cat-col"></td>
-<td class="name-col">[시오레] RRP 박스 (프레쉬 버블 토너)</td>
 <td class="code-col">201069000187</td>
-<td class="exp-col">—</td>
+<td class="name-col">[시오레] RRP 박스 (프레쉬 버블 토너)</td>
 <td class="num">1,070</td>
 <td class="num stock-avail">1,070</td>
 <td class="num"><span class="val-empty">0</span></td>
 <td class="incoming-col"><span class="val-empty">—</span></td>
 <td class="dday-col"><span class="val-empty">—</span></td>
+<td class="deplete-col"><span class="val-empty" title="최근 출고 데이터 없음">출고없음</span></td>
 </tr>
 </tbody>
 </table>
@@ -678,7 +695,129 @@
 </div>
 </div>
 </div>
-<div class="build-footer">자동 생성됨 · 매일 오전 10시(KST) 구글시트에서 갱신 · 마지막 빌드: 2026-09-03 01:57 UTC</div>
+<div class="tab-content" id="tab-expiry">
+<div class="tab-panel-wrap">
+<div class="findings">
+<h2>🔍 핵심 요약</h2>
+<div class='finding-item'><div class='finding-icon icon-ok'>✓</div><div class='finding-text'>유통기한 등록 품목 <strong>9개</strong> 중 임박(90일 이내) <strong>0개</strong>.</div></div>
+</div>
+<div class="panel">
+<div class="panel-header"><h2>⏳ 유통기한 임박 현황</h2><div class="meta">유통기한 빠른 순 정렬 · 총 9개 품목</div></div>
+<table>
+<thead><tr><th>제품코드</th><th style="text-align:left;">제품명</th><th>LOT</th><th>유통기한</th><th>총재고</th><th>가용재고</th><th>D-Day</th></tr></thead>
+<tbody>
+<tr>
+<td class="code-col">202650000035</td>
+<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림</td>
+<td>E25I16J</td>
+<td class="exp-col">2028-10-23</td>
+<td class="num">100</td>
+<td class="num stock-avail">100</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-781</span></td>
+</tr>
+<tr>
+<td class="code-col">201069000196</td>
+<td class="name-col">[시오레US] NMN 하이드레이팅 수딩 크림</td>
+<td>E25116J</td>
+<td class="exp-col">2028-10-23</td>
+<td class="num">33</td>
+<td class="num stock-avail">33</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-781</span></td>
+</tr>
+<tr>
+<td class="code-col">202650000033</td>
+<td class="name-col">[시오레] NMN 프레쉬 버블 토너</td>
+<td>F16C02</td>
+<td class="exp-col">2029-03-15</td>
+<td class="num">419</td>
+<td class="num stock-avail">419</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-924</span></td>
+</tr>
+<tr>
+<td class="code-col">201069000195</td>
+<td class="name-col">[시오레US] NMN 프레쉬 버블 토너</td>
+<td>F16C02</td>
+<td class="exp-col">2029-03-15</td>
+<td class="num">3,674</td>
+<td class="num stock-avail">174</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-924</span></td>
+</tr>
+<tr>
+<td class="code-col">201069000193</td>
+<td class="name-col">[시오레US] NMN 인텐시브 세럼</td>
+<td>2F196C</td>
+<td class="exp-col">2029-03-18</td>
+<td class="num">91</td>
+<td class="num stock-avail">91</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-927</span></td>
+</tr>
+<tr>
+<td class="code-col">202650000033</td>
+<td class="name-col">[시오레] NMN 프레쉬 버블 토너(통합)</td>
+<td>F08F14</td>
+<td class="exp-col">2029-06-07</td>
+<td class="num">5,000</td>
+<td class="num stock-avail">5,000</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-1008</span></td>
+</tr>
+<tr>
+<td class="code-col">202650000036</td>
+<td class="name-col">[시오레] NMN 딥 글로우 리치 크림</td>
+<td>2F181F</td>
+<td class="exp-col">2029-06-15</td>
+<td class="num">6,925</td>
+<td class="num stock-avail">6,925</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-1016</span></td>
+</tr>
+<tr>
+<td class="code-col">202650000034</td>
+<td class="name-col">[시오레] NMN 인텐시브 세럼</td>
+<td>2F354F</td>
+<td class="exp-col">2029-06-29</td>
+<td class="num">1,068</td>
+<td class="num stock-avail">668</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-1030</span></td>
+</tr>
+<tr>
+<td class="code-col">202650000035</td>
+<td class="name-col">[시오레] NMN 하이드레이팅 수딩 크림(통합)</td>
+<td>F10G14</td>
+<td class="exp-col">2029-07-09</td>
+<td class="num">4,861</td>
+<td class="num stock-avail">1,747</td>
+<td class="dday-col"><span class="dday-chip dday-later">D-1040</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-calendar">
+<div class="tab-panel-wrap">
+<div class="panel">
+<div class="panel-header"><h2>2026년 9월 입고 일정</h2><div class="meta">3건</div></div>
+<div class="cal-grid">
+<div class="cal-week cal-dow-row"><div class='cal-dow'>일</div><div class='cal-dow'>월</div><div class='cal-dow'>화</div><div class='cal-dow'>수</div><div class='cal-dow'>목</div><div class='cal-dow'>금</div><div class='cal-dow'>토</div></div>
+<div class='cal-week'><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell'><div class='cal-daynum'>1</div></div><div class='cal-cell'><div class='cal-daynum'>2</div></div><div class='cal-cell'><div class='cal-daynum'>3</div></div><div class='cal-cell'><div class='cal-daynum'>4</div></div><div class='cal-cell'><div class='cal-daynum'>5</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>6</div></div><div class='cal-cell'><div class='cal-daynum'>7</div></div><div class='cal-cell'><div class='cal-daynum'>8</div></div><div class='cal-cell'><div class='cal-daynum'>9</div></div><div class='cal-cell'><div class='cal-daynum'>10</div></div><div class='cal-cell'><div class='cal-daynum'>11</div></div><div class='cal-cell'><div class='cal-daynum'>12</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>13</div></div><div class='cal-cell'><div class='cal-daynum'>14</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>15</div><div class='cal-event'>(사은품) [시오레] NMN 딥 글로우 리치크림 3ml<span>25,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>16</div></div><div class='cal-cell'><div class='cal-daynum'>17</div></div><div class='cal-cell'><div class='cal-daynum'>18</div></div><div class='cal-cell'><div class='cal-daynum'>19</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>20</div></div><div class='cal-cell'><div class='cal-daynum'>21</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>22</div><div class='cal-event'>[시오레] 세안밴드<span>5,000개</span></div><div class='cal-event'>[시오레] 일회용 장바구니<span>5,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>23</div></div><div class='cal-cell'><div class='cal-daynum'>24</div></div><div class='cal-cell'><div class='cal-daynum'>25</div></div><div class='cal-cell'><div class='cal-daynum'>26</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>27</div></div><div class='cal-cell'><div class='cal-daynum'>28</div></div><div class='cal-cell'><div class='cal-daynum'>29</div></div><div class='cal-cell'><div class='cal-daynum'>30</div></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-header"><h2>2026년 10월 입고 일정</h2><div class="meta">6건</div></div>
+<div class="cal-grid">
+<div class="cal-week cal-dow-row"><div class='cal-dow'>일</div><div class='cal-dow'>월</div><div class='cal-dow'>화</div><div class='cal-dow'>수</div><div class='cal-dow'>목</div><div class='cal-dow'>금</div><div class='cal-dow'>토</div></div>
+<div class='cal-week'><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell'><div class='cal-daynum'>1</div></div><div class='cal-cell'><div class='cal-daynum'>2</div></div><div class='cal-cell'><div class='cal-daynum'>3</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>4</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>5</div><div class='cal-event'>[시오레] NMN 프레쉬 버블 토너(통합)<span>5,000개</span></div><div class='cal-event'>[시오레] NMN 딥 글로우 리치 크림<span>10,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>6</div></div><div class='cal-cell'><div class='cal-daynum'>7</div></div><div class='cal-cell'><div class='cal-daynum'>8</div></div><div class='cal-cell'><div class='cal-daynum'>9</div></div><div class='cal-cell'><div class='cal-daynum'>10</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>11</div></div><div class='cal-cell'><div class='cal-daynum'>12</div></div><div class='cal-cell'><div class='cal-daynum'>13</div></div><div class='cal-cell'><div class='cal-daynum'>14</div></div><div class='cal-cell'><div class='cal-daynum'>15</div></div><div class='cal-cell'><div class='cal-daynum'>16</div></div><div class='cal-cell'><div class='cal-daynum'>17</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>18</div></div><div class='cal-cell'><div class='cal-daynum'>19</div></div><div class='cal-cell'><div class='cal-daynum'>20</div></div><div class='cal-cell'><div class='cal-daynum'>21</div></div><div class='cal-cell'><div class='cal-daynum'>22</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>23</div><div class='cal-event'>[시오레] NMN 인텐시브 세럼<span>30,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>24</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>25</div></div><div class='cal-cell'><div class='cal-daynum'>26</div></div><div class='cal-cell'><div class='cal-daynum'>27</div></div><div class='cal-cell'><div class='cal-daynum'>28</div></div><div class='cal-cell'><div class='cal-daynum'>29</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>30</div><div class='cal-event'>[시오레] NMN 인텐시브 세럼<span>10,000개</span></div><div class='cal-event'>[시오레] NMN 딥 글로우 리치 크림<span>5,000개</span></div><div class='cal-event'>[시오레] NMN 하이드로 캡슐 클렌징 밀크<span>5,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>31</div></div></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-header"><h2>2026년 11월 입고 일정</h2><div class="meta">1건</div></div>
+<div class="cal-grid">
+<div class="cal-week cal-dow-row"><div class='cal-dow'>일</div><div class='cal-dow'>월</div><div class='cal-dow'>화</div><div class='cal-dow'>수</div><div class='cal-dow'>목</div><div class='cal-dow'>금</div><div class='cal-dow'>토</div></div>
+<div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>1</div></div><div class='cal-cell'><div class='cal-daynum'>2</div></div><div class='cal-cell'><div class='cal-daynum'>3</div></div><div class='cal-cell'><div class='cal-daynum'>4</div></div><div class='cal-cell'><div class='cal-daynum'>5</div></div><div class='cal-cell'><div class='cal-daynum'>6</div></div><div class='cal-cell'><div class='cal-daynum'>7</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>8</div></div><div class='cal-cell'><div class='cal-daynum'>9</div></div><div class='cal-cell'><div class='cal-daynum'>10</div></div><div class='cal-cell'><div class='cal-daynum'>11</div></div><div class='cal-cell'><div class='cal-daynum'>12</div></div><div class='cal-cell'><div class='cal-daynum'>13</div></div><div class='cal-cell'><div class='cal-daynum'>14</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>15</div></div><div class='cal-cell'><div class='cal-daynum'>16</div></div><div class='cal-cell'><div class='cal-daynum'>17</div></div><div class='cal-cell'><div class='cal-daynum'>18</div></div><div class='cal-cell'><div class='cal-daynum'>19</div></div><div class='cal-cell'><div class='cal-daynum'>20</div></div><div class='cal-cell'><div class='cal-daynum'>21</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>22</div></div><div class='cal-cell cal-has-event'><div class='cal-daynum'>23</div><div class='cal-event'>[시오레] 데일리 릴리프 카밍 수딩 젤<span>10,000개</span></div></div><div class='cal-cell'><div class='cal-daynum'>24</div></div><div class='cal-cell'><div class='cal-daynum'>25</div></div><div class='cal-cell'><div class='cal-daynum'>26</div></div><div class='cal-cell'><div class='cal-daynum'>27</div></div><div class='cal-cell'><div class='cal-daynum'>28</div></div></div><div class='cal-week'><div class='cal-cell'><div class='cal-daynum'>29</div></div><div class='cal-cell'><div class='cal-daynum'>30</div></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div><div class='cal-cell cal-empty'></div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="build-footer">자동 생성됨 · 매일 오전 10시(KST) 구글시트에서 갱신 · 마지막 빌드: 2026-09-03 02:15 UTC</div>
 <script>
 function switchTab(id) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
