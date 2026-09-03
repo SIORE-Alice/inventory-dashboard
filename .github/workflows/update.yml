@@ -2,9 +2,15 @@ name: Update inventory dashboard
 
 on:
   schedule:
-    # 01:00 UTC = 10:00 KST daily
-    - cron: '0 1 * * *'
+    # 01:15 UTC = 10:15 KST daily (fallback safety net in case the webhook misses an edit)
+    - cron: '15 1 * * *'
   workflow_dispatch: {}
+  repository_dispatch:
+    types: [sheet-updated]
+
+concurrency:
+  group: inventory-dashboard-build
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -33,10 +39,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase
           if git diff --quiet -- index.html; then
             echo "No changes to index.html, skipping commit."
           else
             git add index.html
-            git commit -m "Auto-update inventory dashboard from Google Sheet"
+            git commit -m "Auto-update inventory dashboard (event: ${{ github.event_name }})"
             git push
           fi
