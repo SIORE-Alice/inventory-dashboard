@@ -119,8 +119,9 @@ def format_incoming_lines(qty_raw, date_raw):
 def est_depletion(avail, monthly_total, today):
     """
     Estimate the date available stock runs out.
-    Assumption: the '채널별 평균 출고량 · 합계' column is a monthly average
-    outbound quantity, so daily rate = monthly_total / 30.
+    monthly_total is a monthly average outbound quantity (computed directly
+    from the '출고 Raw' sheet by extract_shipment_raw), so daily rate =
+    monthly_total / 30.
     Returns a dict describing the result, or None if avail isn't a number.
     """
     if not isinstance(avail, (int, float)):
@@ -133,6 +134,57 @@ def est_depletion(avail, monthly_total, today):
     days_left = avail / daily_rate
     est_date = today + datetime.timedelta(days=days_left)
     return {'status': 'ok', 'days': int(days_left), 'date': est_date}
+
+
+def extract_shipment_raw(wb):
+    """
+    Aggregate a monthly-average outbound quantity per product code straight
+    from the '출고 Raw' sheet, so 예상소진일 no longer depends on the
+    pre-computed '채널별 평균 출고량' columns in '★ 국내'.
+
+    '출고 Raw' is laid out as repeated blocks, one per sales channel, each
+    starting with a '▣ <채널명>' marker in column A, followed by a header
+    row ('제품코드', '품목명', then one column per month such as '4월'),
+    followed by one data row per product until the next block. This walks
+    every block, sums each product code's quantity across all month columns
+    it finds (so it keeps working as new months are appended), and divides
+    by the number of distinct months seen to get a monthly average — summed
+    across every channel block, matching how the source spreadsheet's own
+    per-channel averages are derived.
+    """
+    ws = wb['출고 Raw']
+    totals = {}
+    month_labels = set()
+    max_row = ws.max_row
+    max_col = ws.max_column
+    r = 1
+    while r <= max_row:
+        marker = ws.cell(row=r, column=1).value
+        if isinstance(marker, str) and marker.strip().startswith('▣'):
+            header_row = r + 1
+            headers = [ws.cell(row=header_row, column=c).value for c in range(1, max_col + 1)]
+            month_cols = [c for c, h in enumerate(headers, start=1) if isinstance(h, str) and h.strip().endswith('월')]
+            month_labels.update(headers[c - 1] for c in month_cols)
+            data_r = header_row + 1
+            while data_r <= max_row:
+                code = ws.cell(row=data_r, column=1).value
+                name = ws.cell(row=data_r, column=2).value
+                if code is None and name is None:
+                    break
+                if isinstance(code, (int, float)):
+                    code_key = int(round(code))
+                    total = totals.get(code_key, 0.0)
+                    for c in month_cols:
+                        val = ws.cell(row=data_r, column=c).value
+                        if isinstance(val, (int, float)):
+                            total += val
+                    totals[code_key] = total
+                data_r += 1
+            r = data_r
+            continue
+        r += 1
+    n_months = len(month_labels) or 1
+    return {code: total / n_months for code, total in totals.items()}
 
 
 def download_workbook():
@@ -227,7 +279,7 @@ def _today_ref(domestic):
     return datetime.datetime.utcnow()
 
 
-def build_domestic_html(domestic):
+def build_domestic_html(domestic, shipment_avg):
     d_rows = domestic['rows']
     today_ref = _today_ref(domestic)
     total_sku = len(d_rows)
@@ -243,10 +295,14 @@ def build_domestic_html(domestic):
     incoming_sorted = sorted(incoming_items, key=dday_key)
     dday_errors = [r for r in d_rows if isinstance(r['dday'], str) and 'VALUE' in r['dday']]
 
-    # depletion estimates, computed once so both the table and findings can use them
+    # depletion estimates, computed once so both the table and findings can use them.
+    # Monthly outbound rate comes straight from '출고 Raw' (see extract_shipment_raw),
+    # matched by 제품코드, not from the '★ 국내' sheet's pre-computed averages.
     depletions = {}
     for r in d_rows:
-        depletions[id(r)] = est_depletion(r['avail'], r['ch']['합계'], today_ref)
+        code_key = int(round(r['code'])) if isinstance(r['code'], (int, float)) else None
+        monthly_avg = shipment_avg.get(code_key) if code_key is not None else None
+        depletions[id(r)] = est_depletion(r['avail'], monthly_avg, today_ref)
     urgent_depletions = [
         r for r in d_rows
         if depletions[id(r)] and depletions[id(r)]['status'] == 'ok' and depletions[id(r)]['days'] <= 14
@@ -275,8 +331,8 @@ def build_domestic_html(domestic):
             else:
                 dday_html = '<span class="val-empty">—</span>'
             blocked_html = f"<span class='stock-blocked'>{n(r['blocked'])}</span>" if (isinstance(r['blocked'], (int, float)) and r['blocked'] > 0) else '<span class="val-empty">0</span>'
-            note_html = f"<span class='note-inline'>{esc(r['note'])}</span>" if r['note'] else ''
             code_disp = esc(int(r['code'])) if isinstance(r['code'], (int, float)) else esc(r['code'])
+            note_disp = esc(r['note']) if r['note'] else '<span class="val-empty">—</span>'
 
             dep = depletions[id(r)]
             if dep is None:
@@ -290,16 +346,18 @@ def build_domestic_html(domestic):
                 cls = 'dday-urgent' if days <= 14 else ('dday-soon' if days <= 30 else 'dday-later')
                 deplete_html = f"<div>{fmt_date_iso(dep['date'])}</div><div class='sub-date {cls}-text'>약 {days}일 후</div>"
 
-            main_rows.append(f"""<tr>
+            row_cls = ' class="cat-group-end"' if i == len(items) - 1 else ''
+            main_rows.append(f"""<tr{row_cls}>
 <td class="cat-col">{cat_cell}</td>
 <td class="code-col">{code_disp}</td>
-<td class="name-col">{esc(r['name'])}{note_html}</td>
+<td class="name-col">{esc(r['name'])}</td>
 <td class="num">{n(r['total'])}</td>
 <td class="num stock-avail">{n(r['avail'])}</td>
 <td class="num">{blocked_html}</td>
 <td class="incoming-col">{incoming}</td>
 <td class="dday-col">{dday_html}</td>
 <td class="deplete-col">{deplete_html}</td>
+<td class="note-col">{note_disp}</td>
 </tr>""")
     domestic_table = '\n'.join(main_rows)
 
@@ -520,8 +578,13 @@ def assemble(domestic, amazon, domestic_table, channel_table, findings_domestic,
   table {{ width: 100%; border-collapse: collapse; font-size: 12.5px; }}
   thead th {{ background: #f9fafb; padding: 10px 12px; text-align: center; font-weight: 600; color: #6b7280; font-size: 11px; letter-spacing: 0.03em; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }}
   thead th:first-child {{ text-align: left; }}
+  th .th-sub {{ display: block; font-weight: 400; color: #b0b6c0; font-size: 9.5px; letter-spacing: 0; white-space: normal; line-height: 1.35; margin-top: 3px; }}
   tbody tr:hover {{ background: #fafafa; }}
-  tbody td {{ padding: 9px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }}
+  tbody td {{ padding: 9px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; line-height: 1.45; }}
+  .stock-table {{ table-layout: fixed; min-width: 1080px; }}
+  .stock-table th, .stock-table td {{ overflow-wrap: break-word; white-space: normal; }}
+  .stock-table .code-col, .stock-table .dday-col, .stock-table .incoming-col, .stock-table .deplete-col {{ white-space: nowrap; }}
+  .cat-group-end > td {{ border-bottom: 2px solid #d8dbe1; }}
   td.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
   .name-col {{ text-align:left; font-weight:600; color:#1f2937; min-width:180px; }}
   .code-col {{ font-size:11px; color:#9ca3af; font-family:monospace; text-align:left; }}
@@ -538,7 +601,7 @@ def assemble(domestic, amazon, domestic_table, channel_table, findings_domestic,
   .box-col {{ font-size:11px; color:#6b7280; text-align:left; white-space:nowrap; }}
   .mono {{ font-family:monospace; }}
   .sub-code {{ font-size:11px; color:#9ca3af; font-weight:400; margin-top:2px; }}
-  .note-inline {{ display:block; font-size:11px; color:#c2410c; font-weight:500; margin-top:3px; }}
+  .note-col {{ font-size:11.5px; color:#c2410c; font-weight:500; text-align:left; line-height:1.4; }}
   .val-empty {{ color:#d1d5db; font-size:11px; }}
   .cat-badge {{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }}
   .cat-nmn {{ background:#eff6ff; color:#1d4ed8; }}
@@ -607,12 +670,17 @@ def assemble(domestic, amazon, domestic_table, channel_table, findings_domestic,
 <h2>📦 제품별 재고 현황</h2>
 <div class="meta">재고 업데이트: {domestic_updated_disp}</div>
 </div>
-<table>
-<thead><tr><th>구분</th><th>제품코드</th><th style="text-align:left;">제품명</th><th>총재고</th><th>가용재고</th><th>불용(대기)</th><th>입고예정</th><th>D-Day</th><th>예상소진일</th></tr></thead>
+<div class="ch-scroll">
+<table class="stock-table">
+<colgroup>
+<col style="width:7%"><col style="width:10%"><col style="width:19%"><col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:14%"><col style="width:6%"><col style="width:10%"><col style="width:12%">
+</colgroup>
+<thead><tr><th>구분</th><th>제품코드</th><th style="text-align:left;">제품명</th><th>총재고</th><th>가용재고</th><th>불용(대기)<span class="th-sub">타 채널 할당<br>완료 수량</span></th><th>입고예정</th><th>D-Day</th><th>예상소진일</th><th style="text-align:left;">비고</th></tr></thead>
 <tbody>
 {domestic_table}
 </tbody>
 </table>
+</div>
 </div>
 <div class="panel">
 <div class="panel-header">
@@ -689,7 +757,8 @@ def main():
     wb = openpyxl.load_workbook(XLSX_PATH, data_only=True)
     domestic = extract_domestic(wb)
     amazon = extract_amazon(wb)
-    domestic_table, channel_table, findings_domestic = build_domestic_html(domestic)
+    shipment_avg = extract_shipment_raw(wb)
+    domestic_table, channel_table, findings_domestic = build_domestic_html(domestic, shipment_avg)
     amazon_table, findings_amazon = build_amazon_html(amazon)
     expiry_panel, findings_expiry = build_expiry_html(domestic)
     calendar_html = build_calendar_html(domestic)
