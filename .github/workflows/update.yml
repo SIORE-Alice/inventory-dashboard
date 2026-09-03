@@ -39,11 +39,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase
           if git diff --quiet -- index.html; then
             echo "No changes to index.html, skipping commit."
           else
             git add index.html
             git commit -m "Auto-update inventory dashboard (event: ${{ github.event_name }})"
+            git pull --rebase
             git push
           fi
